@@ -16,12 +16,11 @@ public class MyBot : IChessBot
 
     public MoveNode Branch(Board board, bool isWhite, int depth = 0)
     {
-        Move[] moves = board.GetLegalMoves();
         MoveNode moveNode = new();
 
         if (depth < maxDepth)
         {
-            foreach (var move in moves)//check all moves
+            foreach (var move in board.GetLegalMoves())//check all moves
             {
                 board.MakeMove(move);
                 MoveNode posibleNextMove = Branch(board, !isWhite, depth + 1);
@@ -42,7 +41,6 @@ public class MyBot : IChessBot
         foreach (MoveNode m in moveNode.moves)if (m.adv > adv == isWhite) adv = m.adv;
 
         moveNode.adv = adv;
-
         return moveNode;
     }
 
@@ -53,13 +51,7 @@ public class MyBot : IChessBot
         if (board.IsInCheckmate()) return 9999 * (isWhite ? -1 : 1);
         if (board.IsDraw()) return 0;
 
-        for (int iteration = 0; iteration < 2; iteration++)
-        {
-            bool iterationWhite = (iteration == 0);
-
-            for (int i = 0; i < 6; i++) adv += BitboardHelper.GetNumberOfSetBits(board.GetPieceBitboard((PieceType)i, iterationWhite))
-                    * pieceValues[i] * (iterationWhite ? 1 : -1);
-        }
+        foreach (bool iterationWhite in new[] { false, true }) for (int i = 0; i < 6; i++) adv += BitboardHelper.GetNumberOfSetBits(board.GetPieceBitboard((PieceType)i, iterationWhite)) * pieceValues[i] * (iterationWhite ? 1 : -1);
 
         if (board.TrySkipTurn())
         {
@@ -74,7 +66,7 @@ public class MyBot : IChessBot
     public class MoveNode
     {
         public List<MoveNode> moves = new();
-        public float adv;//cascading using minimax
+        public float adv;
         public Move currentMove;
         public MoveNode GetBestMove(bool isWhite)
         {
@@ -82,6 +74,5 @@ public class MyBot : IChessBot
             foreach (MoveNode m in moves)if (m.adv > best.adv == isWhite) best=m;
             return best;
         }
-        public MoveNode() { }
     }
 }
